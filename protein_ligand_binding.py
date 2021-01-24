@@ -63,36 +63,48 @@ def main():
         st.markdown('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
 
     # right-side main panel
-    col1, col2 = st.beta_columns((1, 5))
+    col1, col2 = st.beta_columns((1, 4.5))
     with col1:
-        mode = st.radio(label="", options=["[P]", "[P]:[L]"], index=0)
-        m = st.number_input('Protein mass (kDa)', value=100.0, min_value=10.0, step=10.0, format="%.1f")
+        mode = st.radio(label="", options=["[P]", "[P]:[L]", "Kd"], index=0)
+        m = st.number_input('Protein mass/binding site (kDa)', value=100.0, min_value=10.0, step=10.0, format="%g")
         if mode == "[P]":
             n = st.number_input('# of [P]', value=3, min_value=1, step=1)
             ps = [0] * n
             for i in range(n):
                 c = 0.01 * np.power(10, i)
-                ps[i] = st.number_input(f'[P] (mg/ml) - {i+1}', value=c, min_value=0.0, step=0.1, format="%.3f")
-            ps = np.unique([ p for p in ps if p>0 ])
-            kd = st.number_input('Kd (nM)', value=1000.0, min_value=0.0, step=1.0, format="%.3f")
+                ps[i] = st.number_input(f'[P] (mg/ml) - {i+1}', value=c, min_value=0.0, step=0.1, format="%g")
+            ps = np.sort(np.unique([ p for p in ps if p>0 ]))
+            kd = st.number_input('Kd (nM)', value=1000.0, min_value=0.0, step=1.0, format="%g")
+            kd_molar = kd * 1e-9    # nM -> M
             p_molar_min = ps.min()/m * 1e3 # mg/ml -> μM
             p_molar_max = ps.max()/m * 1e3 # mg/ml -> μM
-            lmin = st.number_input('[L] (μM) - min', value=p_molar_min*1e-2, min_value=0.0, step=p_molar_min*1e-2, format="%.3f")
-            lmax = st.number_input('[L] (μM) - max', value=p_molar_max*1e2, min_value=lmin*1e4, step=p_molar_max, format="%.3f")
-        else:   # "[P]:[L]"
+            lmin = st.number_input('[L] (μM) - min', value=p_molar_min*1e-2, min_value=0.0, step=p_molar_min*1e-2, format="%g")
+            lmax = st.number_input('[L] (μM) - max', value=p_molar_max*1e2, min_value=lmin*1e4, step=p_molar_max, format="%g")
+        elif mode == "[P]:[L]":
             n = st.number_input('# of [P]:[L]', value=3, min_value=1, step=1)
             ratios = [1.0] * n
             for i in range(n):
                 ratio = 1.0 * np.power(10, i)
-                ratios[i] = st.number_input(f'[P]:[L]=1:? - {i+1}', value=ratio, min_value=0.0, step=1.0, format="%.1f")
-            ratios = np.unique([ r for r in ratios if r>0 ])
-            kd = st.number_input('Kd (nM)', value=1000.0, min_value=0.0, step=1.0, format="%.3f")
-            pmin = st.number_input('[P] (mg/ml) - min', value=0.001, min_value=0.0, step=0.01, format="%.4f")
-            pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%.3f")
+                ratios[i] = st.number_input(f'[P]:[L]=1:? - {i+1}', value=ratio, min_value=0.0, step=1.0, format="%g")
+            ratios = np.sort(np.unique([ r for r in ratios if r>0 ]))
+            kd = st.number_input('Kd (nM)', value=1000.0, min_value=0.0, step=1.0, format="%g")
+            kd_molar = kd * 1e-9    # nM -> M
+            pmin = st.number_input('[P] (mg/ml) - min', value=0.001, min_value=0.0, step=0.01, format="%g")
+            pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%g")
+        else:   # "Kd"
+            ratio = st.number_input(f'[P]:[L]=1:?', value=1.0, min_value=0.0, step=1.0, format="%g")
+            n = st.number_input('# of Kd', value=3, min_value=1, step=1)
+            kd_list = [1e-6, 1e-9, 1e-3, 1e-12, 1e-7, 1e-5, 1e-8, 1e-4, 1e-15, 1e-13, 1e-14]
+            kds = [kd_list[i % len(kd_list)] * 1e9 for i in range(n)]
+            for i, kd in enumerate(sorted(kds)):
+                kds[i] = st.number_input(f'Kd (nM) - {i+1}', value=kd, min_value=0.0, step=kd*1e-1, format="%g")
+            kds = np.sort(np.unique([ kd for kd in kds if kd>0 ]))
+            kds_molar = kds * 1e-9    # nM -> M
+            pmin = st.number_input('[P] (mg/ml) - min', value=0.001, min_value=0.0, step=0.01, format="%g")
+            pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%g")
         n_data_points = st.number_input('# of data points', value=100, min_value=10, step=10)
         xlog = st.checkbox('X-axis in log scale', value=True)
         
-        kd_molar = kd * 1e-9    # nM -> M
 
     with col2:
         y_label = "fraction of protein in ligand-bound state"
@@ -116,8 +128,8 @@ def main():
 
             for pi, p in enumerate(ps):
                 p_molar = p/(m*1e3) # mg/ml -> M
-                p_txt = f"{float(round(p,3))} mg/ml / {float(round(p_molar*1e6,3))} μM"
-                ratio = (l_molar/p_molar).round(1)
+                p_txt = f"{p:.3g} mg/ml / {p_molar*1e6:.3g} μM"
+                ratio = l_molar/p_molar
                 f = binding_fraction(kd=kd_molar, protein_concentration=p_molar, ligand_concentration=l_molar)
                 source = dict(x=x, y=f, p_txt=[p_txt]*len(x), ratio=ratio, kd=[kd]*len(x))
                 line_dash = line_dashes[pi%len(line_dashes)]
@@ -128,7 +140,7 @@ def main():
                 raw_data.append((label, f))        
             fig.x_range.start = l[0]
             fig.x_range.end = l[-1]
-        else:   # "[P]:[L]"
+        elif mode == "[P]:[L]":
             if xlog:
                 p = np.logspace(np.log10(pmin), np.log10(pmax), n_data_points+1)
             else:
@@ -142,7 +154,7 @@ def main():
             fig = figure(title="", x_axis_type=x_axis_type, x_axis_label=x_label, y_axis_label=y_label, tools=tools, tooltips=hover_tips)
 
             for ri, r in enumerate(ratios):
-                ratio_txt = f"1:{float(round(r,1))}"
+                ratio_txt = f"1:{r:g}"
                 l_molar = p_molar * r
                 f = binding_fraction(kd=kd_molar, protein_concentration=p_molar, ligand_concentration=l_molar)
                 source = dict(x=x, y=f, x_mc=p_molar*1e6, ratio_txt=[ratio_txt]*len(x), l=l_molar*1e6, kd=[kd]*len(x))
@@ -150,6 +162,33 @@ def main():
                 line_width = 2
                 line = fig.line(x='x', y='y', source=source, line_dash=line_dash, line_width=line_width)
                 label = f"[P]:[L] = {ratio_txt}"
+                legends.append(LegendItem(label=label, renderers=[line]))
+                raw_data.append((label, f))
+            fig.x_range.start = p[0]
+            fig.x_range.end = p[-1]        
+        else:   # "Kd"
+            if xlog:
+                p = np.logspace(np.log10(pmin), np.log10(pmax), n_data_points+1)
+            else:
+                p = np.linspace(min, pmax, n_data_points+1)
+            p_molar = p / (m*1e3)  # mg/ml -> M
+
+            x = p
+            x_label = "[P] (mg/ml)"
+
+            hover_tips = [("[P]:[L]", "@ratio_txt"), ("[P]", "$x mg/ml / @x_mc μM"), ("[L]", "@l μM"), ("Kd", "@kd_txt"), ("fraction", "$y")]
+            fig = figure(title="", x_axis_type=x_axis_type, x_axis_label=x_label, y_axis_label=y_label, tools=tools, tooltips=hover_tips)
+
+            for ki, kd_molar in enumerate(kds_molar):
+                kd_txt = f"{kd_molar*1e9:.3g} nM"
+                ratio_txt = f"1:{ratio:g}"
+                l_molar = p_molar * ratio
+                f = binding_fraction(kd=kd_molar, protein_concentration=p_molar, ligand_concentration=l_molar)
+                source = dict(x=x, y=f, x_mc=p_molar*1e6, ratio_txt=[ratio_txt]*len(x), l=l_molar*1e6, kd_txt=[kd_txt]*len(x))
+                line_dash = line_dashes[ki%len(line_dashes)]
+                line_width = 2
+                line = fig.line(x='x', y='y', source=source, line_dash=line_dash, line_width=line_width)
+                label = f"Kd = {kd_txt}"
                 legends.append(LegendItem(label=label, renderers=[line]))
                 raw_data.append((label, f))
             fig.x_range.start = p[0]
@@ -174,6 +213,7 @@ def main():
                 }
             """)
             fig.js_on_event(DoubleTap, toggle_legend_js)
+        st.text("") # workaround for a layout bug in streamlit 
         st.bokeh_chart(fig, use_container_width=True)
 
         show_data = st.checkbox('show raw data', value=False)
@@ -185,7 +225,7 @@ def main():
             for i, (label, f) in enumerate(raw_data):
                 data[:, 1+i] = f
                 columns.append(('fraction-'+label))
-            columns = [col.replace(" ", "") for col in columns]
+            columns = [col.replace(" ", "").rjust(32) for col in columns]
             df = pd.DataFrame(data, columns=columns)
             st.dataframe(df, width=None)
             st.markdown(get_table_download_link(df), unsafe_allow_html=True)
