@@ -1,0 +1,1 @@
+web: python setup.py && streamlit run protein_ligand_binding.py
