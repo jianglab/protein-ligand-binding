@@ -49,7 +49,7 @@ def main():
 
     with st.sidebar:    # sidebar at the left of the screen
         st.title(title)
-        st.write(r'For a reversible binding reaction:$P + L\  {\rightleftharpoons}\  P{\cdot}L$')
+        st.write(r'For a reversible binding reaction:$\\P + L\  {\rightleftharpoons}\  P{\cdot}L$')
         st.write(r"the binding affinity $K_D$ is defined as$K_D = \frac{[P][L]}{[P {\cdot}L]}$")
         st.write(r'then, the fraction of protein in ligand-bound state is:')
         st.latex(r'f = \frac{[P{\cdot}L]}{[P{\cdot}L]+[P]} = \frac{1}{1 + \frac{K_D}{[L]}}')
@@ -58,6 +58,7 @@ def main():
         st.latex(r'f = \frac{1}{1 + \frac{K_D}{[L]}} = \frac{1}{1 + \frac{K_D}{[L_T]-[P_T]f}}')
         st.latex(r'P_Tf^2-(P_T+L_T+K_D)f+L_T=0')
         st.latex(r'f=\frac{P_T+L_T+K_D-\sqrt{(P_T+L_T+K_D)^2-4P_TL_T}}{2P_T}')
+        st.write(r'So the fraction of protein with ligand bound is a function of total protein concentration, total ligand concentration, and $K_D$, instead of just the molar ratio of protein and ligand ($P_T:L_T$)')
         
         # make radio display horizontal
         st.markdown('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
@@ -65,44 +66,44 @@ def main():
     # right-side main panel
     col1, col2 = st.beta_columns((1, 4.5))
     with col1:
-        mode = st.radio(label="", options=["[P]", "[P]:[L]", "Kd"], index=0)
-        m = st.number_input('Protein mass/binding site (kDa)', value=100.0, min_value=10.0, step=10.0, format="%g")
+        mode = st.radio(label="Plotting Mode", options=["[P]", "[P]:[L]", "Kd"], index=0, help="Choose a plotting mode: Mode [P] will plot ligand concentration [L] vs fraction curves at different protein concentrations [P]; Mode [P]:[L] will plot protein concentration [P] vs fraction curves at different molar ratios of protein and ligand [P]:[L]; Mode Kd will plot ligand concentration [L] vs fraction curves at different binding affinities Kd")
+        m = st.number_input('Protein mass per binding site (kDa)', value=100.0, min_value=10.0, step=10.0, format="%g", help="Same as the total protein mass for monomer protein. If the protein is an oligomer with each subunit having a binding site, the input value here should be the total protein mass divided by the number of subunits")
         if mode == "[P]":
-            n = st.number_input('# of [P]', value=3, min_value=1, step=1)
+            n = st.number_input('# of [P]', value=3, min_value=1, step=1, help="Number of protein concentrations to plot")
             ps = [0] * n
             for i in range(n):
                 c = 0.01 * np.power(10, i)
-                ps[i] = st.number_input(f'[P] (mg/ml) - {i+1}', value=c, min_value=0.0, step=0.1, format="%g")
+                ps[i] = st.number_input(f'[P] (mg/ml) - Curve {i+1}', value=c, min_value=0.0, step=0.1, format="%g", help=f"Protein concentration for curve {i+1}")
             ps = np.sort(np.unique([ p for p in ps if p>0 ]))
-            kd = st.number_input('Kd (nM)', value=1000.0, min_value=0.0, step=1.0, format="%g")
+            kd = st.number_input('Kd (nM)', value=1000.0, min_value=0.0, step=1.0, format="%g", help="Binding affinity")
             kd_molar = kd * 1e-9    # nM -> M
             p_molar_min = ps.min()/m * 1e3 # mg/ml -> μM
             p_molar_max = ps.max()/m * 1e3 # mg/ml -> μM
-            lmin = st.number_input('[L] (μM) - min', value=p_molar_min*1e-2, min_value=0.0, step=p_molar_min*1e-2, format="%g")
-            lmax = st.number_input('[L] (μM) - max', value=p_molar_max*1e2, min_value=lmin*1e4, step=p_molar_max, format="%g")
+            lmin = st.number_input('[L] (μM) - min', value=p_molar_min*1e-2, min_value=0.0, step=p_molar_min*1e-2, format="%g", help="Minimal ligand concentration to plot")
+            lmax = st.number_input('[L] (μM) - max', value=p_molar_max*1e2, min_value=lmin*1e4, step=p_molar_max, format="%g", help="Maximal ligand concentration to plot")
         elif mode == "[P]:[L]":
-            n = st.number_input('# of [P]:[L]', value=3, min_value=1, step=1)
+            n = st.number_input('# of [P]:[L]', value=3, min_value=1, step=1, help="Number of protein:ligand molar ratios to plot")
             ratios = [1.0] * n
             for i in range(n):
                 ratio = 1.0 * np.power(10, i)
-                ratios[i] = st.number_input(f'[P]:[L]=1:? - {i+1}', value=ratio, min_value=0.0, step=1.0, format="%g")
+                ratios[i] = st.number_input(f'[P]:[L]=1:? - Curve {i+1}', value=ratio, min_value=0.0, step=1.0, format="%g", help=f"Molar ratio of protein and ligand for curve {i+1}")
             ratios = np.sort(np.unique([ r for r in ratios if r>0 ]))
-            kd = st.number_input('Kd (nM)', value=1000.0, min_value=0.0, step=1.0, format="%g")
+            kd = st.number_input('Kd (nM)', value=1000.0, min_value=0.0, step=1.0, format="%g", help="Binding affinity")
             kd_molar = kd * 1e-9    # nM -> M
-            pmin = st.number_input('[P] (mg/ml) - min', value=0.001, min_value=0.0, step=0.01, format="%g")
-            pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%g")
+            pmin = st.number_input('[P] (mg/ml) - min', value=0.001, min_value=0.0, step=0.01, format="%g", help="Minimal protein concentration to plot")
+            pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%g", help="Maximal protein concentration to plot")
         else:   # "Kd"
-            ratio = st.number_input(f'[P]:[L]=1:?', value=1.0, min_value=0.0, step=1.0, format="%g")
-            n = st.number_input('# of Kd', value=3, min_value=1, step=1)
+            ratio = st.number_input(f'[P]:[L]=1:?', value=1.0, min_value=0.0, step=1.0, format="%g", help="Molar ratio of protein and ligand")
+            n = st.number_input('# of Kd', value=3, min_value=1, step=1, help="Number of binding affinities to plot")
             kd_list = [1e-6, 1e-9, 1e-3, 1e-12, 1e-7, 1e-5, 1e-8, 1e-4, 1e-15, 1e-13, 1e-14]
             kds = [kd_list[i % len(kd_list)] * 1e9 for i in range(n)]
             for i, kd in enumerate(sorted(kds)):
-                kds[i] = st.number_input(f'Kd (nM) - {i+1}', value=kd, min_value=0.0, step=kd*1e-1, format="%g")
+                kds[i] = st.number_input(f'Kd (nM) - Curve {i+1}', value=kd, min_value=0.0, step=kd*1e-1, format="%g", help=f"Binding affinity for curve {i+1}")
             kds = np.sort(np.unique([ kd for kd in kds if kd>0 ]))
             kds_molar = kds * 1e-9    # nM -> M
-            pmin = st.number_input('[P] (mg/ml) - min', value=0.001, min_value=0.0, step=0.01, format="%g")
-            pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%g")
-        n_data_points = st.number_input('# of data points', value=100, min_value=10, step=10)
+            pmin = st.number_input('[P] (mg/ml) - min', value=0.001, min_value=0.0, step=0.01, format="%g", help="Minimal protein concentration to plot")
+            pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%g", help="Maximal protein concentration to plot")
+        n_data_points = st.number_input('# of data points', value=100, min_value=10, step=10, help="Number of data points per curve")
         xlog = st.checkbox('X-axis in log scale', value=True)
         
 
