@@ -63,6 +63,14 @@ def main():
         # make radio display horizontal
         st.markdown('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
 
+        hide_streamlit_style = """
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        </style>
+        """
+        st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
+
     # right-side main panel
     col1, col2 = st.beta_columns((1, 4.5))
     with col1:
@@ -197,6 +205,12 @@ def main():
         fig.y_range.start = 0
         fig.y_range.end = 1
         fig.yaxis[0].ticker.desired_num_ticks = 10
+        from bokeh.models import CustomJS
+        from bokeh.events import MouseEnter
+        title_js = CustomJS(args=dict(title=title), code="""
+            document.title=title
+        """)
+        fig.js_on_event(MouseEnter, title_js)
         if len(legends):
             from bokeh.models import Legend
             legend = Legend(items=legends)
