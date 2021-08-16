@@ -72,7 +72,7 @@ def main():
         st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
 
     # right-side main panel
-    col1, col2 = st.beta_columns((1, 4.5))
+    col1, col2 = st.columns((1, 4.5))
     with col1:
         mode = st.radio(label="Plotting Mode", options=["[P]", "[P]:[L]", "Kd"], index=0, help="Choose a plotting mode: Mode [P] will plot ligand concentration [L] vs fraction curves at different protein concentrations [P]; Mode [P]:[L] will plot protein concentration [P] vs fraction curves at different molar ratios of protein and ligand [P]:[L]; Mode Kd will plot ligand concentration [L] vs fraction curves at different binding affinities Kd")
         m = st.number_input('Protein mass per binding site (kDa)', value=100.0, min_value=10.0, step=10.0, format="%g", help="Same as the total protein mass for monomer protein. If the protein is an oligomer with each subunit having a binding site, the input value here should be the total protein mass divided by the number of subunits")
