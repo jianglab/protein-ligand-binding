@@ -1,7 +1,7 @@
 """ 
 MIT License
 
-Copyright (c) 2021 Wen Jiang
+Copyright (c) 2021-2022 Wen Jiang
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -50,12 +50,12 @@ def main():
     with st.sidebar:    # sidebar at the left of the screen
         st.title(title)
         st.write(r'For a reversible binding reaction:$\\P + L\  {\rightleftharpoons}\  P{\cdot}L$')
-        st.write(r"the binding affinity $K_D$ is defined as$K_D = \frac{[P][L]}{[P {\cdot}L]}$")
+        st.write(r"the binding affinity $K_D$ is defined as  $K_D = \frac{[P]_{free}[L]_{free}}{[P {\cdot}L]}$")
         st.write(r'then, the fraction of protein in ligand-bound state is:')
-        st.latex(r'f = \frac{[P{\cdot}L]}{[P{\cdot}L]+[P]} = \frac{1}{1 + \frac{K_D}{[L]}}')
-        st.latex(r'f = 0.5 \  when \  [L] = K_D')
-        st.write('Note that $[L]$ means free, unbound ligand concentration that we cannot control directly. Instead, we can only control the total concentration of the protein ($P_T=[P{\cdot}L]+[P]$) and ligand ($L_T=[P{\cdot}L]+[L]$). So it is useful to express $f$ in terms of $P_T$ and $L_T$:')
-        st.latex(r'f = \frac{1}{1 + \frac{K_D}{[L]}} = \frac{1}{1 + \frac{K_D}{[L_T]-[P_T]f}}')
+        st.latex(r'f = \frac{[P{\cdot}L]}{[P{\cdot}L]+[P]_{free}} = \frac{1}{1 + \frac{K_D}{[L]_{free}}}')
+        st.latex(r'f = 0.5 \  when \  [L]_{free} = K_D')
+        st.write('Note that $[L]_{free}$ means free, unbound ligand concentration that we cannot control directly. Instead, we can only control the total concentration of the protein ($P_T=[P{\cdot}L]+[P]_{free}$) and ligand ($L_T=[P{\cdot}L]+[L]_{free}$). So it is useful to express $f$ in terms of $P_T$ and $L_T$:')
+        st.latex(r'f = \frac{1}{1 + \frac{K_D}{[L]_{free}}} = \frac{1}{1 + \frac{K_D}{[L_T]-[P_T]f}}')
         st.latex(r'P_Tf^2-(P_T+L_T+K_D)f+L_T=0')
         st.latex(r'f=\frac{P_T+L_T+K_D-\sqrt{(P_T+L_T+K_D)^2-4P_TL_T}}{2P_T}')
         st.write(r'So the fraction of protein with ligand bound is a function of total protein concentration, total ligand concentration, and $K_D$, instead of just the molar ratio of protein and ligand ($P_T:L_T$)')
@@ -75,9 +75,9 @@ def main():
     col1, col2 = st.columns((1, 4.5))
     with col1:
         mode = st.radio(label="Plotting Mode", options=["[P]", "[P]:[L]", "Kd"], index=0, help="Choose a plotting mode: Mode [P] will plot ligand concentration [L] vs fraction curves at different protein concentrations [P]; Mode [P]:[L] will plot protein concentration [P] vs fraction curves at different molar ratios of protein and ligand [P]:[L]; Mode Kd will plot ligand concentration [L] vs fraction curves at different binding affinities Kd")
-        m = st.number_input('Protein mass per binding site (kDa)', value=100.0, min_value=10.0, step=10.0, format="%g", help="Same as the total protein mass for monomer protein. If the protein is an oligomer with each subunit having a binding site, the input value here should be the total protein mass divided by the number of subunits")
+        m = st.number_input('Protein mass per binding site (kDa)', value=100.0, min_value=1.0, step=1.0, format="%g", help="Same as the total protein mass for monomer protein. If the protein is an oligomer with each subunit having a binding site, the input value here should be the total protein mass divided by the number of subunits")
         if mode == "[P]":
-            n = st.number_input('# of [P]', value=3, min_value=1, step=1, help="Number of protein concentrations to plot")
+            n = int(st.number_input('# of [P]', value=3, min_value=1, step=1, help="Number of protein concentrations to plot"))
             ps = [0] * n
             for i in range(n):
                 c = 0.01 * np.power(10, i)
@@ -87,10 +87,10 @@ def main():
             kd_molar = kd * 1e-9    # nM -> M
             p_molar_min = ps.min()/m * 1e3 # mg/ml -> μM
             p_molar_max = ps.max()/m * 1e3 # mg/ml -> μM
-            lmin = st.number_input('[L] (μM) - min', value=p_molar_min*1e-2, min_value=0.0, step=p_molar_min*1e-2, format="%g", help="Minimal ligand concentration to plot")
+            lmin = st.number_input(r'$$[L]_T (μM) - min$$', value=p_molar_min*1e-2, min_value=0.0, step=p_molar_min*1e-2, format="%g", help="Minimal ligand concentration to plot")
             lmax = st.number_input('[L] (μM) - max', value=p_molar_max*1e2, min_value=lmin*1e4, step=p_molar_max, format="%g", help="Maximal ligand concentration to plot")
         elif mode == "[P]:[L]":
-            n = st.number_input('# of [P]:[L]', value=3, min_value=1, step=1, help="Number of protein:ligand molar ratios to plot")
+            n = int(st.number_input('# of [P]:[L]', value=3, min_value=1, step=1, help="Number of protein:ligand molar ratios to plot"))
             ratios = [1.0] * n
             for i in range(n):
                 ratio = 1.0 * np.power(10, i)
@@ -102,7 +102,7 @@ def main():
             pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%g", help="Maximal protein concentration to plot")
         else:   # "Kd"
             ratio = st.number_input(f'[P]:[L]=1:?', value=1.0, min_value=0.0, step=1.0, format="%g", help="Molar ratio of protein and ligand")
-            n = st.number_input('# of Kd', value=3, min_value=1, step=1, help="Number of binding affinities to plot")
+            n = int(st.number_input('# of Kd', value=3, min_value=1, step=1, help="Number of binding affinities to plot"))
             kd_list = [1e-6, 1e-9, 1e-3, 1e-12, 1e-7, 1e-5, 1e-8, 1e-4, 1e-15, 1e-13, 1e-14]
             kds = [kd_list[i % len(kd_list)] * 1e9 for i in range(n)]
             for i, kd in enumerate(sorted(kds)):
@@ -111,7 +111,7 @@ def main():
             kds_molar = kds * 1e-9    # nM -> M
             pmin = st.number_input('[P] (mg/ml) - min', value=0.001, min_value=0.0, step=0.01, format="%g", help="Minimal protein concentration to plot")
             pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%g", help="Maximal protein concentration to plot")
-        n_data_points = st.number_input('# of data points', value=100, min_value=10, step=10, help="Number of data points per curve")
+        n_data_points = int(st.number_input('# of data points', value=100, min_value=10, step=10, help="Number of data points per curve"))
         xlog = st.checkbox('X-axis in log scale', value=True)
         
 
@@ -130,7 +130,7 @@ def main():
             l_molar = l * 1e-6  # μM -> M
 
             x = l
-            x_label = "[L] (μM)"
+            x_label = r"$$[L]_T\ (μM)$$"
 
             hover_tips = [("[P]:[L]", "1:@ratio"), ("[P]", "@p_txt"), ("[L]", "$x μM"), ("Kd", "@kd nM"), ("fraction", "$y")]
             fig = figure(title="", x_axis_type=x_axis_type, x_axis_label=x_label, y_axis_label=y_label, tools=tools, tooltips=hover_tips)
@@ -157,7 +157,7 @@ def main():
             p_molar = p / (m*1e3)  # mg/ml -> M
 
             x = p
-            x_label = "[P] (mg/ml)"
+            x_label = r"$$[P]_T\ (mg/ml)$$"
 
             hover_tips = [("[P]:[L]", "@ratio_txt"), ("[P]", "$x mg/ml / @x_mc μM"), ("[L]", "@l μM"), ("Kd", "@kd nM"), ("fraction", "$y")]
             fig = figure(title="", x_axis_type=x_axis_type, x_axis_label=x_label, y_axis_label=y_label, tools=tools, tooltips=hover_tips)
@@ -183,7 +183,7 @@ def main():
             p_molar = p / (m*1e3)  # mg/ml -> M
 
             x = p
-            x_label = "[P] (mg/ml)"
+            x_label = r"$$[P]_T\ (mg/ml)$$"
 
             hover_tips = [("[P]:[L]", "@ratio_txt"), ("[P]", "$x mg/ml / @x_mc μM"), ("[L]", "@l μM"), ("Kd", "@kd_txt"), ("fraction", "$y")]
             fig = figure(title="", x_axis_type=x_axis_type, x_axis_label=x_label, y_axis_label=y_label, tools=tools, tooltips=hover_tips)
@@ -247,14 +247,12 @@ def main():
 
         st.markdown("*Developed by the [Jiang Lab@Purdue University](https://jiang.bio.purdue.edu). Report problems to Wen Jiang (jiang12 at purdue.edu)*")
 
-@st.cache(persist=True, show_spinner=False)
 def binding_fraction(kd, protein_concentration, ligand_concentration):
     # unit of all concentrations: M
     t = protein_concentration + ligand_concentration + kd
     f = (t - np.sqrt(t*t - 4*protein_concentration*ligand_concentration))/(2*protein_concentration)
     return f
 
-@st.cache(persist=True, show_spinner=False)
 def get_table_download_link(df):
     """Generates a link allowing the data in a given panda dataframe to be downloaded
     in:  dataframe
