@@ -81,14 +81,14 @@ def main():
             ps = [0] * n
             for i in range(n):
                 c = 0.01 * np.power(10, i)
-                ps[i] = st.number_input(f'[P] (mg/ml) - Curve {i+1}', value=c, min_value=0.0, step=0.1, format="%g", help=f"Protein concentration for curve {i+1}")
+                ps[i] = st.number_input(f'[P] (mg/ml) - Curve {i+1}', value=c, min_value=0.0, step=0.1, format="%g", help=f"Total protein concentration for curve {i+1}")
             ps = np.sort(np.unique([ p for p in ps if p>0 ]))
             kd = st.number_input('Kd (nM)', value=1000.0, min_value=0.0, step=1.0, format="%g", help="Binding affinity")
             kd_molar = kd * 1e-9    # nM -> M
             p_molar_min = ps.min()/m * 1e3 # mg/ml -> μM
             p_molar_max = ps.max()/m * 1e3 # mg/ml -> μM
-            lmin = st.number_input(r'$$[L]_T (μM) - min$$', value=p_molar_min*1e-2, min_value=0.0, step=p_molar_min*1e-2, format="%g", help="Minimal ligand concentration to plot")
-            lmax = st.number_input('[L] (μM) - max', value=p_molar_max*1e2, min_value=lmin*1e4, step=p_molar_max, format="%g", help="Maximal ligand concentration to plot")
+            lmin = st.number_input(r'[L] (μM) - min', value=p_molar_min*1e-2, min_value=0.0, step=p_molar_min*1e-2, format="%g", help="Minimal total ligand concentration to plot")
+            lmax = st.number_input('[L] (μM) - max', value=p_molar_max*1e2, min_value=lmin*1e4, step=p_molar_max, format="%g", help="Maximal total ligand concentration to plot")
         elif mode == "[P]:[L]":
             n = int(st.number_input('# of [P]:[L]', value=3, min_value=1, step=1, help="Number of protein:ligand molar ratios to plot"))
             ratios = [1.0] * n
@@ -98,10 +98,10 @@ def main():
             ratios = np.sort(np.unique([ r for r in ratios if r>0 ]))
             kd = st.number_input('Kd (nM)', value=1000.0, min_value=0.0, step=1.0, format="%g", help="Binding affinity")
             kd_molar = kd * 1e-9    # nM -> M
-            pmin = st.number_input('[P] (mg/ml) - min', value=0.001, min_value=0.0, step=0.01, format="%g", help="Minimal protein concentration to plot")
-            pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%g", help="Maximal protein concentration to plot")
+            pmin = st.number_input('[P] (mg/ml) - min', value=0.001, min_value=0.0, step=0.01, format="%g", help="Minimal total protein concentration to plot")
+            pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%g", help="Maximal total protein concentration to plot")
         else:   # "Kd"
-            ratio = st.number_input(f'[P]:[L]=1:?', value=1.0, min_value=0.0, step=1.0, format="%g", help="Molar ratio of protein and ligand")
+            ratio = st.number_input(f'[P]:[L]=1:?', value=1.0, min_value=0.0, step=1.0, format="%g", help="Molar ratio of total protein and total ligand")
             n = int(st.number_input('# of Kd', value=3, min_value=1, step=1, help="Number of binding affinities to plot"))
             kd_list = [1e-6, 1e-9, 1e-3, 1e-12, 1e-7, 1e-5, 1e-8, 1e-4, 1e-15, 1e-13, 1e-14]
             kds = [kd_list[i % len(kd_list)] * 1e9 for i in range(n)]
@@ -109,8 +109,8 @@ def main():
                 kds[i] = st.number_input(f'Kd (nM) - Curve {i+1}', value=kd, min_value=0.0, step=kd*1e-1, format="%g", help=f"Binding affinity for curve {i+1}")
             kds = np.sort(np.unique([ kd for kd in kds if kd>0 ]))
             kds_molar = kds * 1e-9    # nM -> M
-            pmin = st.number_input('[P] (mg/ml) - min', value=0.001, min_value=0.0, step=0.01, format="%g", help="Minimal protein concentration to plot")
-            pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%g", help="Maximal protein concentration to plot")
+            pmin = st.number_input('[P] (mg/ml) - min', value=0.001, min_value=0.0, step=0.01, format="%g", help="Minimal total protein concentration to plot")
+            pmax = st.number_input('[P] (mg/ml) - max', value=10.0, min_value=pmin*10.0, step=0.1, format="%g", help="Maximal total protein concentration to plot")
         n_data_points = int(st.number_input('# of data points', value=100, min_value=10, step=10, help="Number of data points per curve"))
         xlog = st.checkbox('X-axis in log scale', value=True)
         
