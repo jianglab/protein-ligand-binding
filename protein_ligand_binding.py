@@ -60,9 +60,6 @@ def main():
         st.latex(r'f=\frac{P_T+L_T+K_D-\sqrt{(P_T+L_T+K_D)^2-4P_TL_T}}{2P_T}')
         st.write(r'So the fraction of protein with ligand bound is a function of total protein concentration, total ligand concentration, and $K_D$, instead of just the molar ratio of protein and ligand ($P_T:L_T$)')
         
-        # make radio display horizontal
-        st.markdown('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
-
         hide_streamlit_style = """
         <style>
         #MainMenu {visibility: hidden;}
@@ -74,7 +71,7 @@ def main():
     # right-side main panel
     col1, col2 = st.columns((1, 4.5))
     with col1:
-        mode = st.radio(label="Plotting Mode", options=["[P]", "[P]:[L]", "Kd"], index=0, help="Choose a plotting mode: Mode [P] will plot ligand concentration [L] vs fraction curves at different protein concentrations [P]; Mode [P]:[L] will plot protein concentration [P] vs fraction curves at different molar ratios of protein and ligand [P]:[L]; Mode Kd will plot ligand concentration [L] vs fraction curves at different binding affinities Kd")
+        mode = st.radio(label="Plotting Mode", options=["[P]", "[P]:[L]", "Kd"], index=0, horizontal=True, help="Choose a plotting mode: Mode [P] will plot ligand concentration [L] vs fraction curves at different protein concentrations [P]; Mode [P]:[L] will plot protein concentration [P] vs fraction curves at different molar ratios of protein and ligand [P]:[L]; Mode Kd will plot ligand concentration [L] vs fraction curves at different binding affinities Kd")
         m = st.number_input('Protein mass per binding site (kDa)', value=100.0, min_value=1.0, step=1.0, format="%g", help="Same as the total protein mass for monomer protein. If the protein is an oligomer with each subunit having a binding site, the input value here should be the total protein mass divided by the number of subunits")
         if mode == "[P]":
             n = int(st.number_input('# of [P]', value=3, min_value=1, step=1, help="Number of protein concentrations to plot"))
