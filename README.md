@@ -4,7 +4,7 @@ This Web app provides interactive online simulation of the fraction of protein m
 Click the link below to show the protein-ligand binding curves!
 
 <p align="center">
-<a href="https://protein-ligand-binding.herokuapp.com">Web App</a>
+<a href="https://jianglab-protein-ligand-binding-streamlit-app-7qd88x.streamlitapp.com/">Web App</a>
 
-<a href="https://protein-ligand-binding.herokuapp.com"><img src="./protein_ligand_binding.png" style='width: 100%; object-fit: contain'></a>
+<a href="https://jianglab-protein-ligand-binding-streamlit-app-7qd88x.streamlitapp.com/"><img src="./protein_ligand_binding.png" style='width: 100%; object-fit: contain'></a>
 </p>
