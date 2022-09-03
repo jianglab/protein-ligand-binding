@@ -47,6 +47,10 @@ def main():
     title = "Protein-Ligand Binding"
     st.set_page_config(page_title=title, layout="wide")
 
+    hosted, host = is_hosted(return_host=True)
+    if hosted and host in ['heroku']:
+        st.error(f"This app hosted on Heroku will be unavailable starting November 28, 2022 [when Heroku discontinues free hosting service](https://blog.heroku.com/next-chapter). Please switch to [the same app hosted elsewhere](https://jianglab-protein-ligand-binding-streamlit-app-7qd88x.streamlitapp.com)")
+
     with st.sidebar:    # sidebar at the left of the screen
         st.title(title)
         st.write(r'For a reversible binding reaction:$\\P + L\  {\rightleftharpoons}\  P{\cdot}L$')
@@ -244,6 +248,9 @@ def main():
 
         st.markdown("*Developed by the [Jiang Lab@Purdue University](https://jiang.bio.purdue.edu). Report problems to Wen Jiang (jiang12 at purdue.edu)*")
 
+        #qr_image = qr_code()
+        #st.image(qr_image)
+
 def binding_fraction(kd, protein_concentration, ligand_concentration):
     # unit of all concentrations: M
     t = protein_concentration + ligand_concentration + kd
@@ -273,6 +280,54 @@ def setup_anonymous_usage_tracking():
             index_file.write_text(txt)
     except:
         pass
+
+def get_username():
+    from getpass import getuser
+    return getuser()
+
+def get_hostname():
+    import socket
+    fqdn = socket.getfqdn()
+    return fqdn
+
+def is_hosted(return_host=False):
+    hosted = False
+    host = ""
+    fqdn = get_hostname()
+    if fqdn.find("heroku")!=-1:
+        hosted = True
+        host = "heroku"
+    username = get_username()
+    if username.find("appuser")!=-1:
+        hosted = True
+        host = "streamlit"
+    if not host:
+        host = "localhost"
+    if return_host:
+        return hosted, host
+    else:
+        return hosted
+
+def qr_code(url=None, size = 8):
+    import_with_auto_install(["qrcode"])
+    import qrcode
+    if url is None: # ad hoc way before streamlit can return the url
+        _, host = is_hosted(return_host=True)
+        if len(host)<1: return None
+        if host == "streamlit":
+            url = "https://share.streamlit.io/wjiang/ctfsimulation/master/"
+        elif host == "heroku":
+            url = "https://ctfsimulation.herokuapp.com/"
+        else:
+            url = f"http://{host}:8501/"
+        import urllib
+        params = st.experimental_get_query_params()
+        d = {k:params[k][0] for k in params}
+        url += "?" + urllib.parse.urlencode(d)
+    if not url: return None
+    img = qrcode.make(url)  # qrcode.image.pil.PilImage
+    data = np.array(img.convert("RGBA"))
+    return data
 
 if __name__ == "__main__":
     setup_anonymous_usage_tracking()
