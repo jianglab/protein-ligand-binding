@@ -22,7 +22,6 @@ import scipy
 from bokeh.plotting import figure
 from bokeh.models import LegendItem 
 import pandas as pd
-import matplotlib.pyplot as plt
 from bokeh.models import CustomJS
 from bokeh.events import MouseEnter
 from bokeh.models import Legend
