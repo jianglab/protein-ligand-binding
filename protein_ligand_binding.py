@@ -45,12 +45,11 @@ def main():
         st.title(title)
         st.write(r'For a competitive binding reaction:$\\P_{A} + L\  {\rightleftharpoons}\  P_{A}{\cdot}L$ $\\P_{B} + L\  {\rightleftharpoons}\  P_{B}{\cdot}L$')
         st.write(r'the binding affinities, $K_A$ and $K_B$, are defined as  $K_D = \frac{[P]_{free}[L]_{free}}{[P {\cdot}L]}$.')
-        st.write(r'Then the fraction of protein, $P_{A}$, in a competitive ligand-bound state is:')
-        st.latex(r'[P_A{\cdot}L] = \frac{[L_{free}]{\cdot}[P_{A_{0}}]}{K_{A}{\cdot}(1+\frac{[P_{B_{0}}]}{K_B})+[L]_{free}}')
-        st.write(r'Note that $[L]_{free}$ means free, unbound ligand concentration that we cannot control directly. Instead, we can only control the total concentration of the protein ($P_{A_{0}}=[P_{A}{\cdot}L]+[P]_{A_{free}},$ and $P_{B_{0}}=[P_{B}{\cdot}L]+[P]_{B_{free}}$) and ligand ($L_0=[P_{A}{\cdot}L]+[P_{B}{\cdot}L]+[L]_{free}$). So to generalize this to $n$ number of proteins we see:')
-        st.latex(r'P_{A_{0}}=[P_{A}{\cdot}L]+[P]_{A_{free}}')
-        st.latex(r'L_0=[P_{A}{\cdot}L]+[P_{B}{\cdot}L]+[P_{C}{\cdot}L]+...+[P_{n}{\cdot}L]+[L]_{free}')
-        st.write(r'So we can numerically solve for $L_{free}$. Plugging the estimated value of $L_{free}$ back into our fraction bound equation, we can approximate a solution.')
+        st.write(r'Then the concentration of protein, $P_{A}$, in a competitive ligand-bound state is:')
+        st.latex(r'[P_A{\cdot}L] = \frac{[L_{free}]{\cdot}[P_{A_{0}}]}{K_{A}{\cdot}(1+\frac{[P_{B_{0}}]}{K_B})+[L]_{free}}.')
+        st.write(r'Note that $[L]_{free}$ means free, unbound ligand concentration that we cannot control directly. Instead, we can only control the total concentration of the protein ($P_{A_{0}}=[P_{A}{\cdot}L]+[P]_{A_{free}}$ and $P_{B_{0}}=[P_{B}{\cdot}L]+[P]_{B_{free}}$) and ligand ($L_0=[P_{A}{\cdot}L]+[P_{B}{\cdot}L]+[L]_{free}$). So to generalize this to $n$ number of proteins we see:')
+        st.latex(r'L_0=[P_{A}{\cdot}L]+[P_{B}{\cdot}L]+[P_{C}{\cdot}L]+...+[P_{n}{\cdot}L]+[L]_{free}.')
+        st.write(r'Thus we can numerically solve for $L_{free}$ and recursively plug that value back into our concentration bound equation, generating a binding fraction curve.')
         
         hide_streamlit_style = """
         <style>
@@ -66,22 +65,21 @@ def main():
 
     with col1:
         
-        num_p = st.number_input('Number of Proteins', value=2, min_value=2, step=1)
+        num_p = st.number_input('Number of Proteins', value=4, min_value=1, step=1)
 
         num_p1 = num_p+1
 
-        column_l = ['Ligand']
-        df_l = pd.DataFrame(np.tile([1000], (1, 1)), ['Lig. Conc. (μM)'], column_l)
-        edited_df_l = st.data_editor(df_l)
+        df_l = pd.DataFrame(np.array([[0.001], [1000.0]]).T, ['X-axis'], ['Min. Ligand Conc. (μM)', 'Max. Ligand Conc. (μM)'])
+        edited_df_l = st.experimental_data_editor(df_l)
 
         column_p = ['Protein %d' % (i+1) for i in range(int(num_p))]
-        df_p = pd.DataFrame(np.tile([300], (1, int(num_p))), ['Prot. Conc. (μM)'], column_p)
-        edited_df_p = st.data_editor(df_p) 
+        df_p = pd.DataFrame(np.tile([10.0], (1, int(num_p))), ['Prot. Conc. (μM)'], column_p)
+        edited_df_p = st.experimental_data_editor(df_p) 
 
 
-        column_kd = ['Protein %d Kd (μM)' % (i+1) for i in range(int(num_p))]
-        df_kd = pd.DataFrame(np.tile([500], (1, int(num_p))), [f'Ligand'], column_kd)
-        edited_df_kd = st.data_editor(df_kd) 
+        column_kd = ['Protein %d' % (i+1) for i in range(int(num_p))]
+        df_kd = pd.DataFrame(np.tile([1.0], (1, int(num_p))), [f'Kd (μM)'], column_kd)
+        edited_df_kd = st.experimental_data_editor(df_kd) 
 
         xlog = st.checkbox('X-axis in log scale', value=True)
 
@@ -99,47 +97,87 @@ def main():
         raw_data = []
         i = 0
         ratios = [1.0] * int(num_p)
+        lmax = edited_df_l.loc['X-axis','Max. Ligand Conc. (μM)']
+        lmin = edited_df_l.loc['X-axis','Min. Ligand Conc. (μM)']
+        
+        if int(num_p) == 1:
+            if xlog:
+                l = np.logspace(np.log10(lmin), np.log10(lmax), 101)
+            else:
+                l = np.linspace(1e-3, lmax, 101)
+            l_molar = l / (1e3)  # mg/ml -> M
+
+            x = l
+            x_label = r"$$[L]_{Total}\ (μM)$$"
+
+            hover_tips = [("[P]:[L]", "@ratio_txt : $x"), ("[P]", "$x mg/ml / @x_mc μM"), ("[L]", "@l μM"), ("Fraction", "$y")]
+            fig = figure(title="", x_axis_type=x_axis_type, x_axis_label=x_label, y_axis_label=y_label, tools=tools, tooltips=hover_tips)
+
+            for ri, r in enumerate(ratios):  #plot
+                frac = H
+                i=i+1
+                l_mol = edited_df_l.loc['X-axis','Max. Ligand Conc. (μM)']
+                p_mol = edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'] 
+                kd_molar = edited_df_kd.loc['Kd (μM)', f'Protein {i}'] 
+                kd_list_molar = pd.concat([edited_df_kd.iloc[0][0:i-1],edited_df_kd.iloc[0][i:]])
+                p_mol_list = pd.concat([edited_df_p.iloc[0][0:i-1],edited_df_p.iloc[0][i:]])
+                ratio_txt = f"{edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}']}"
+                frac += one_bind(kd=kd_molar, prot_conc=p_mol, H=H)
+                sol_l=[]
+                for j in l:
+                    tmp=frac-j
+                    sol_l.append(nsolve(tmp, H, 1))
+                sol_l=np.array(sol_l,dtype=np.float64)
+                total = (one_bind(kd=kd_molar, prot_conc=p_mol, H = sol_l*1000))/(edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'])
+                source = dict(x=x, y=total, x_mc=l_molar*r*1e6, ratio_txt=[ratio_txt]*len(x), l=l_molar*1e6, kd=[kd_molar]*len(x))
+                line_dash = line_dashes[ri%len(line_dashes)]
+                line = fig.line(x='x', y='y', source=source, line_dash=line_dash, line_width=2)
+                label = f"Protein {i}"
+                legends.append(LegendItem(label=label, renderers=[line]))
+                raw_data.append((label, total))
+            fig.x_range.start = l[0]
+            fig.x_range.end = l[-1]
 
 
-          
-        lmax = edited_df_l.loc['Lig. Conc. (μM)','Ligand']
-        if xlog:
-            l = np.logspace(np.log10(1e-3), np.log10(lmax), 101)
         else:
-            l = np.linspace(1e-3, lmax, 101)
-        l_molar = l / (1e3)  # mg/ml -> M
+            if xlog:
+                l = np.logspace(np.log10(lmin), np.log10(lmax), 101)
+            else:
+                l = np.linspace(1e-3, lmax, 101)
+            l_molar = l / (1e3)  # mg/ml -> M
 
-        x = l
-        x_label = r"$$[L]_T\ (μM)$$"
+            x = l
+            x_label = r"$$[L]_{Total}\ (μM)$$"
 
-        hover_tips = [("[P]:[L]", "@ratio_txt"), ("[P]", "$x mg/ml / @x_mc μM"), ("[L]", "@l μM"), ("Kd", "@kd nM"), ("fraction", "$y")]
-        fig = figure(title="", x_axis_type=x_axis_type, x_axis_label=x_label, y_axis_label=y_label, tools=tools, tooltips=hover_tips)
+            hover_tips = [("[P]:[L]", "@ratio_txt : $x"), ("[P]", "$x mg/ml / @x_mc μM"), ("[L]", "@l μM"), ("Fraction", "$y")]
+            fig = figure(title="", x_axis_type=x_axis_type, x_axis_label=x_label, y_axis_label=y_label, tools=tools, tooltips=hover_tips)
 
-            
-        for ri, r in enumerate(ratios):  #plot
-            frac = H
-            i=i+1
-            l_mol = edited_df_l.loc['Lig. Conc. (μM)','Ligand']
-            p_mol = edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'] 
-            kd_molar = edited_df_kd.loc['Ligand', f'Protein {i} Kd (μM)'] 
-            kd_list_molar = pd.concat([edited_df_kd.iloc[0][0:i-1],edited_df_kd.iloc[0][i:]])
-            p_mol_list = pd.concat([edited_df_p.iloc[0][0:i-1],edited_df_p.iloc[0][i:]])
-            ratio_txt = f"{edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}']}:{edited_df_l.loc['Lig. Conc. (μM)','Ligand']}"
-            frac += percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc=p_mol, prot_conc_list=p_mol_list, H=H)
-            sol_l=[]
-            for j in l:
-                tmp=frac-j
-                sol_l.append(nsolve(tmp, H, 1))
-            sol_l=np.array(sol_l,dtype=np.float64)
-            total = (percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc=p_mol, prot_conc_list=p_mol_list, H = sol_l*1000))/(edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'])
-            source = dict(x=x, y=total, x_mc=l_molar*r*1e6, ratio_txt=[ratio_txt]*len(x), l=l_molar*1e6, kd=[kd_molar]*len(x))
-            line_dash = line_dashes[ri%len(line_dashes)]
-            line = fig.line(x='x', y='y', source=source, line_dash=line_dash, line_width=2)
-            label = f"Protein {i}"
-            legends.append(LegendItem(label=label, renderers=[line]))
-            raw_data.append((label, total))
-        fig.x_range.start = l[0]
-        fig.x_range.end = l[-1]
+            for ri, r in enumerate(ratios):  #plot
+                frac = H
+                i=i+1
+                l_mol = edited_df_l.loc['X-axis','Max. Ligand Conc. (μM)']
+                p_mol = edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'] 
+                kd_molar = edited_df_kd.loc['Kd (μM)', f'Protein {i}'] 
+                kd_list_molar = pd.concat([edited_df_kd.iloc[0][0:i-1],edited_df_kd.iloc[0][i:]])
+                p_mol_list = pd.concat([edited_df_p.iloc[0][0:i-1],edited_df_p.iloc[0][i:]])
+                ratio_txt = f"{edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}']}"
+                frac += percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc=p_mol, prot_conc_list=p_mol_list, H=H)
+                sol_l=[]
+                for j in l:
+                    tmp=frac-j
+                    sol_l.append(nsolve(tmp, H, 1))
+                sol_l=np.array(sol_l,dtype=np.float64)
+                total = (percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc=p_mol, prot_conc_list=p_mol_list, H = sol_l*1000))/(edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'])
+                source = dict(x=x, y=total, x_mc=l_molar*r*1e6, ratio_txt=[ratio_txt]*len(x), l=l_molar*1e6, kd=[kd_molar]*len(x))
+                line_dash = line_dashes[ri%len(line_dashes)]
+                line = fig.line(x='x', y='y', source=source, line_dash=line_dash, line_width=2)
+                label = f"Protein {i}"
+                legends.append(LegendItem(label=label, renderers=[line]))
+                raw_data.append((label, total))
+            fig.x_range.start = l[0]
+            fig.x_range.end = l[-1]
+
+
         fig.y_range.start = 0
         fig.y_range.end = 1
         fig.yaxis[0].ticker.desired_num_ticks = 10
