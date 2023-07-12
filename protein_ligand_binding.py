@@ -11,23 +11,21 @@ def import_with_auto_install(packages, scope=locals()):
             import subprocess
             subprocess.call(f'pip install {package_pip_name}', shell=True)
             scope[package_import_name] =  __import__(package_import_name)
-required_packages = "streamlit numpy scipy pandas bokeh sympy qrcode".split()
+required_packages = "streamlit numpy pandas bokeh".split()
 import_with_auto_install(required_packages)
 
 from secrets import randbelow
 from ssl import PROTOCOL_TLS_CLIENT
 import streamlit as st
 import numpy as np
-import scipy
-import pandas as pd
 from bokeh.plotting import figure
 from bokeh.models import LegendItem 
+import pandas as pd
 from bokeh.models import CustomJS
 from bokeh.events import MouseEnter
 from bokeh.models import Legend
-from bokeh.models import CustomJS
 from bokeh.events import DoubleTap
-from sympy import roots, cos, nsolve, Symbol, nroots, solve, poly
+from sympy import nsolve
 from sympy.abc import H
 
 
@@ -46,7 +44,7 @@ def main():
         st.write(r'For a competitive binding reaction:$\\P_{A} + L\  {\rightleftharpoons}\  P_{A}{\cdot}L$ $\\P_{B} + L\  {\rightleftharpoons}\  P_{B}{\cdot}L$')
         st.write(r'the binding affinities, $K_A$ and $K_B$, are defined as  $K_D = \frac{[P]_{free}[L]_{free}}{[P {\cdot}L]}$.')
         st.write(r'Then the concentration of protein, $P_{A}$, in a competitive ligand-bound state is:')
-        st.latex(r'[P_A{\cdot}L] = \frac{[L_{free}]{\cdot}[P_{A_{0}}]}{K_{A}{\cdot}(1+\frac{[P_{B_{0}}]}{K_B})+[L]_{free}}.')
+        st.latex(r'[P_A{\cdot}L] = \frac{[L]_{free}{\cdot}[P_{A_{0}}]}{K_{A}{\cdot}(1+\frac{[P_{B_{0}}]}{K_B})+[L]_{free}}.')
         st.write(r'Note that $[L]_{free}$ means free, unbound ligand concentration that we cannot control directly. Instead, we can only control the total concentration of the protein ($P_{A_{0}}=[P_{A}{\cdot}L]+[P]_{A_{free}}$ and $P_{B_{0}}=[P_{B}{\cdot}L]+[P]_{B_{free}}$) and ligand ($L_0=[P_{A}{\cdot}L]+[P_{B}{\cdot}L]+[L]_{free}$). So to generalize this to $n$ number of proteins we see:')
         st.latex(r'L_0=[P_{A}{\cdot}L]+[P_{B}{\cdot}L]+[P_{C}{\cdot}L]+...+[P_{n}{\cdot}L]+[L]_{free}.')
         st.write(r'Thus we can numerically solve for $L_{free}$ and recursively plug that value back into our concentration bound equation, generating a binding fraction curve.')
@@ -104,19 +102,17 @@ def main():
             if xlog:
                 l = np.logspace(np.log10(lmin), np.log10(lmax), 101)
             else:
-                l = np.linspace(1e-3, lmax, 101)
-            l_molar = l / (1e3)  # mg/ml -> M
+                l = np.linspace(lmin, lmax, 101)
 
             x = l
             x_label = r"$$[L]_{Total}\ (μM)$$"
 
-            hover_tips = [("[P]:[L]", "@ratio_txt : $x"), ("[P]", "$x mg/ml / @x_mc μM"), ("[L]", "@l μM"), ("Fraction", "$y")]
+            hover_tips = [("[P]:[L]", "@ratio_txt : $x"), ("Fraction", "$y")]
             fig = figure(title="", x_axis_type=x_axis_type, x_axis_label=x_label, y_axis_label=y_label, tools=tools, tooltips=hover_tips)
 
             for ri, r in enumerate(ratios):  #plot
                 frac = H
                 i=i+1
-                l_mol = edited_df_l.loc['X-axis','Max. Ligand Conc. (μM)']
                 p_mol = edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'] 
                 kd_molar = edited_df_kd.loc['Kd (μM)', f'Protein {i}'] 
                 kd_list_molar = pd.concat([edited_df_kd.iloc[0][0:i-1],edited_df_kd.iloc[0][i:]])
@@ -128,8 +124,8 @@ def main():
                     tmp=frac-j
                     sol_l.append(nsolve(tmp, H, 1))
                 sol_l=np.array(sol_l,dtype=np.float64)
-                total = (one_bind(kd=kd_molar, prot_conc=p_mol, H = sol_l*1000))/(edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'])
-                source = dict(x=x, y=total, x_mc=l_molar*r*1e6, ratio_txt=[ratio_txt]*len(x), l=l_molar*1e6, kd=[kd_molar]*len(x))
+                total = (one_bind(kd=kd_molar, prot_conc=p_mol, H = sol_l))/(edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'])
+                source = dict(x=x, y=total, ratio_txt=[ratio_txt]*len(x), kd=[kd_molar]*len(x))
                 line_dash = line_dashes[ri%len(line_dashes)]
                 line = fig.line(x='x', y='y', source=source, line_dash=line_dash, line_width=2)
                 label = f"Protein {i}"
@@ -143,19 +139,17 @@ def main():
             if xlog:
                 l = np.logspace(np.log10(lmin), np.log10(lmax), 101)
             else:
-                l = np.linspace(1e-3, lmax, 101)
-            l_molar = l / (1e3)  # mg/ml -> M
+                l = np.linspace(lmin, lmax, 101)
 
             x = l
             x_label = r"$$[L]_{Total}\ (μM)$$"
 
-            hover_tips = [("[P]:[L]", "@ratio_txt : $x"), ("[P]", "$x mg/ml / @x_mc μM"), ("[L]", "@l μM"), ("Fraction", "$y")]
+            hover_tips = [("[P]:[L]", "@ratio_txt : $x"), ("Fraction", "$y")]
             fig = figure(title="", x_axis_type=x_axis_type, x_axis_label=x_label, y_axis_label=y_label, tools=tools, tooltips=hover_tips)
 
             for ri, r in enumerate(ratios):  #plot
                 frac = H
                 i=i+1
-                l_mol = edited_df_l.loc['X-axis','Max. Ligand Conc. (μM)']
                 p_mol = edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'] 
                 kd_molar = edited_df_kd.loc['Kd (μM)', f'Protein {i}'] 
                 kd_list_molar = pd.concat([edited_df_kd.iloc[0][0:i-1],edited_df_kd.iloc[0][i:]])
@@ -167,8 +161,8 @@ def main():
                     tmp=frac-j
                     sol_l.append(nsolve(tmp, H, 1))
                 sol_l=np.array(sol_l,dtype=np.float64)
-                total = (percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc=p_mol, prot_conc_list=p_mol_list, H = sol_l*1000))/(edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'])
-                source = dict(x=x, y=total, x_mc=l_molar*r*1e6, ratio_txt=[ratio_txt]*len(x), l=l_molar*1e6, kd=[kd_molar]*len(x))
+                total = (percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc=p_mol, prot_conc_list=p_mol_list, H = sol_l))/(edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'])
+                source = dict(x=x, y=total, ratio_txt=[ratio_txt]*len(x), kd=[kd_molar]*len(x))
                 line_dash = line_dashes[ri%len(line_dashes)]
                 line = fig.line(x='x', y='y', source=source, line_dash=line_dash, line_width=2)
                 label = f"Protein {i}"
@@ -240,27 +234,6 @@ def is_hosted(return_host=False):
         return hosted, host
     else:
         return hosted
-
-def qr_code(url=None, size = 8):
-    import_with_auto_install(["qrcode"])
-    import qrcode
-    if url is None: # ad hoc way before streamlit can return the url
-        _, host = is_hosted(return_host=True)
-        if len(host)<1: return None
-        if host == "streamlit":
-            url = "https://share.streamlit.io/wjiang/ctfsimulation/master/"
-        elif host == "heroku":
-            url = "https://ctfsimulation.herokuapp.com/"
-        else:
-            url = f"http://{host}:8501/"
-        import urllib
-        params = st.experimental_get_query_params()
-        d = {k:params[k][0] for k in params}
-        url += "?" + urllib.parse.urlencode(d)
-    if not url: return None
-    img = qrcode.make(url)  # qrcode.image.pil.PilImage
-    data = np.array(img.convert("RGBA"))
-    return data
 
 if __name__ == "__main__":
     main()
