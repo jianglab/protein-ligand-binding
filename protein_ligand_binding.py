@@ -203,6 +203,10 @@ def main():
         st.bokeh_chart(fig, use_container_width=True)
  
 
+def one_bind(kd, prot_conc, H):
+    total = (prot_conc*H)/(kd+H)
+    return total
+
 def percent_bound(kd, kd_list, prot_conc, prot_conc_list, H):
     adj_kd = kd
     for i in range(len(kd_list)):
