@@ -63,7 +63,7 @@ def main():
 
     with col1:
         
-        num_p = st.number_input('Number of Proteins', value=4, min_value=1, step=1)
+        num_p = st.number_input('Number of Proteins', value=2, min_value=1, step=1)
 
         num_p1 = num_p+1
 
