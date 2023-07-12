@@ -74,16 +74,16 @@ def main():
 
         column_l = ['Ligand']
         df_l = pd.DataFrame(np.tile([1000], (1, 1)), ['Lig. Conc. (μM)'], column_l)
-        edited_df_l = st.experimental_data_editor(df_l)
+        edited_df_l = st.data_editor(df_l)
 
         column_p = ['Protein %d' % (i+1) for i in range(int(num_p))]
         df_p = pd.DataFrame(np.tile([300], (1, int(num_p))), ['Prot. Conc. (μM)'], column_p)
-        edited_df_p = st.experimental_data_editor(df_p) 
+        edited_df_p = st.data_editor(df_p) 
 
 
         column_kd = ['Protein %d Kd (μM)' % (i+1) for i in range(int(num_p))]
         df_kd = pd.DataFrame(np.tile([500], (1, int(num_p))), [f'Ligand'], column_kd)
-        edited_df_kd = st.experimental_data_editor(df_kd) 
+        edited_df_kd = st.data_editor(df_kd) 
 
         xlog = st.checkbox('X-axis in log scale', value=True)
 
