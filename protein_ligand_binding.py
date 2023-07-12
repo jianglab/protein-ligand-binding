@@ -11,7 +11,7 @@ def import_with_auto_install(packages, scope=locals()):
             import subprocess
             subprocess.call(f'pip install {package_pip_name}', shell=True)
             scope[package_import_name] =  __import__(package_import_name)
-required_packages = "streamlit numpy pandas bokeh".split()
+required_packages = "streamlit numpy scipy pandas bokeh sympy qrcode".split()
 import_with_auto_install(required_packages)
 
 from secrets import randbelow
@@ -19,9 +19,9 @@ from ssl import PROTOCOL_TLS_CLIENT
 import streamlit as st
 import numpy as np
 import scipy
+import pandas as pd
 from bokeh.plotting import figure
 from bokeh.models import LegendItem 
-import pandas as pd
 from bokeh.models import CustomJS
 from bokeh.events import MouseEnter
 from bokeh.models import Legend
