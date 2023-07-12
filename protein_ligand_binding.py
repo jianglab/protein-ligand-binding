@@ -18,7 +18,7 @@ from secrets import randbelow
 from ssl import PROTOCOL_TLS_CLIENT
 import streamlit as st
 import numpy as np
-import scipy as scipy
+import scipy
 from bokeh.plotting import figure
 from bokeh.models import LegendItem 
 import pandas as pd
