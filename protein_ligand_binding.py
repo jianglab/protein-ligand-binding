@@ -11,19 +11,17 @@ def import_with_auto_install(packages, scope=locals()):
             import subprocess
             subprocess.call(f'pip install {package_pip_name}', shell=True)
             scope[package_import_name] =  __import__(package_import_name)
-required_packages = "streamlit numpy pandas bokeh".split()
+required_packages = "streamlit numpy scipy pandas bokeh sympy qrcode".split()
 import_with_auto_install(required_packages)
 
 from secrets import randbelow
 from ssl import PROTOCOL_TLS_CLIENT
 import streamlit as st
 import numpy as np
-import scipy as scipy
+import scipy
+import pandas as pd
 from bokeh.plotting import figure
 from bokeh.models import LegendItem 
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 from bokeh.models import CustomJS
 from bokeh.events import MouseEnter
 from bokeh.models import Legend
@@ -74,16 +72,16 @@ def main():
 
         column_l = ['Ligand']
         df_l = pd.DataFrame(np.tile([1000], (1, 1)), ['Lig. Conc. (μM)'], column_l)
-        edited_df_l = st.experimental_data_editor(df_l)
+        edited_df_l = st.data_editor(df_l)
 
         column_p = ['Protein %d' % (i+1) for i in range(int(num_p))]
         df_p = pd.DataFrame(np.tile([300], (1, int(num_p))), ['Prot. Conc. (μM)'], column_p)
-        edited_df_p = st.experimental_data_editor(df_p) 
+        edited_df_p = st.data_editor(df_p) 
 
 
         column_kd = ['Protein %d Kd (μM)' % (i+1) for i in range(int(num_p))]
         df_kd = pd.DataFrame(np.tile([500], (1, int(num_p))), [f'Ligand'], column_kd)
-        edited_df_kd = st.experimental_data_editor(df_kd) 
+        edited_df_kd = st.data_editor(df_kd) 
 
         xlog = st.checkbox('X-axis in log scale', value=True)
 
