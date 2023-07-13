@@ -44,7 +44,7 @@ def main():
         st.write(r'For a competitive binding reaction:$\\P_{A} + L\  {\rightleftharpoons}\  P_{A}{\cdot}L$ $\\P_{B} + L\  {\rightleftharpoons}\  P_{B}{\cdot}L$')
         st.write(r'the binding affinities, $K_A$ and $K_B$, are defined as  $K_D = \frac{[P]_{free}[L]_{free}}{[P {\cdot}L]}$.')
         st.write(r'Then the concentration of protein, $P_{A}$, in a competitive ligand-bound state is:')
-        st.latex(r'[P_A{\cdot}L] = \frac{[L]_{free}{\cdot}[P_{A_{0}}]}{K_{A}{\cdot}(1+\frac{[P_{B_{0}}]}{K_B})+[L]_{free}}.')
+        st.latex(r'[P_A{\cdot}L] = \frac{[L]_{free}{\cdot}[P_{A_{0}}]}{K_{A}+[L]_{free}}.')
         st.write(r'Note that $[L]_{free}$ means free, unbound ligand concentration that we cannot control directly. Instead, we can only control the total concentration of the protein ($P_{A_{0}}=[P_{A}{\cdot}L]+[P]_{A_{free}}$ and $P_{B_{0}}=[P_{B}{\cdot}L]+[P]_{B_{free}}$) and ligand ($L_0=[P_{A}{\cdot}L]+[P_{B}{\cdot}L]+[L]_{free}$). So to generalize this to $n$ number of proteins we see:')
         st.latex(r'L_0=[P_{A}{\cdot}L]+[P_{B}{\cdot}L]+[P_{C}{\cdot}L]+...+[P_{n}{\cdot}L]+[L]_{free}.')
         st.write(r'Thus we can numerically solve for $L_{free}$ and recursively plug that value back into our concentration bound equation, generating a binding fraction curve.')
@@ -63,7 +63,7 @@ def main():
 
     with col1:
         
-        num_p = st.number_input('Number of Proteins', value=2, min_value=1, step=1)
+        num_p = st.number_input('Number of Proteins', value=4, min_value=1, step=1)
 
         num_p1 = num_p+1
 
@@ -122,7 +122,7 @@ def main():
                 sol_l=[]
                 for j in l:
                     tmp=frac-j
-                    sol_l.append(nsolve(tmp, H, 1))
+                    sol_l.append(nsolve(tmp, (0,j), solver = 'bisect'))
                 sol_l=np.array(sol_l,dtype=np.float64)
                 total = (one_bind(kd=kd_molar, prot_conc=p_mol, H = sol_l))/(edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'])
                 source = dict(x=x, y=total, ratio_txt=[ratio_txt]*len(x), kd=[kd_molar]*len(x))
@@ -155,13 +155,13 @@ def main():
                 kd_list_molar = pd.concat([edited_df_kd.iloc[0][0:i-1],edited_df_kd.iloc[0][i:]])
                 p_mol_list = pd.concat([edited_df_p.iloc[0][0:i-1],edited_df_p.iloc[0][i:]])
                 ratio_txt = f"{edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}']}"
-                frac += percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc=p_mol, prot_conc_list=p_mol_list, H=H)
+                frac += percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc = p_mol, prot_conc_list=p_mol_list, H=H)
                 sol_l=[]
                 for j in l:
-                    tmp=frac-j
-                    sol_l.append(nsolve(tmp, H, 1))
-                sol_l=np.array(sol_l,dtype=np.float64)
-                total = (percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc=p_mol, prot_conc_list=p_mol_list, H = sol_l))/(edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'])
+                    tmp = frac-j
+                    sol_l.append(nsolve(tmp, (0,j), solver = 'bisect'))
+                sol_l = np.array(sol_l,dtype=np.float64)
+                total = (percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc = p_mol, prot_conc_list=p_mol_list, H = sol_l))/(edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'])
                 source = dict(x=x, y=total, ratio_txt=[ratio_txt]*len(x), kd=[kd_molar]*len(x))
                 line_dash = line_dashes[ri%len(line_dashes)]
                 line = fig.line(x='x', y='y', source=source, line_dash=line_dash, line_width=2)
@@ -203,8 +203,8 @@ def one_bind(kd, prot_conc, H):
 
 def percent_bound(kd, kd_list, prot_conc, prot_conc_list, H):
     adj_kd = kd
-    for i in range(len(kd_list)):
-        adj_kd = adj_kd*(1+prot_conc_list[i]/kd_list[i])
+    #for i in range(len(kd_list)):
+    #    adj_kd = adj_kd*(1+prot_conc_list[i]/kd_list[i])
     total = (prot_conc*H)/(adj_kd+H)
     return total
 
