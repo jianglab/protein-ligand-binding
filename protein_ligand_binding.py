@@ -39,7 +39,7 @@ def main():
     if hosted and host in ['heroku']:
         st.error(f"This app hosted on Heroku will be unavailable starting November 28, 2022 [when Heroku discontinues free hosting service](https://blog.heroku.com/next-chapter). Please switch to [the same app hosted elsewhere](https://jianglab-protein-ligand-binding-streamlit-app-7qd88x.streamlitapp.com)")
 
-    with st.sidebar:    # sidebar at the left of the screen
+    with st.sidebar:
         st.title(title)
         st.write(r'For a competitive binding reaction:$\\P_{A} + L\  {\rightleftharpoons}\  P_{A}{\cdot}L$ $\\P_{B} + L\  {\rightleftharpoons}\  P_{B}{\cdot}L$')
         st.write(r'the binding affinities, $K_A$ and $K_B$, are defined as  $K_D = \frac{[P]_{free}[L]_{free}}{[P {\cdot}L]}$.')
@@ -57,27 +57,26 @@ def main():
         """
         st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
 
-    # right-side main panel
-    col1, col2 = st.columns((2, 4))
+    col1, col2 = st.columns((1.5, 4.5))
 
 
     with col1:
         
-        num_p = st.number_input('Number of Proteins', value=4, min_value=1, step=1)
-
+        num_p = st.number_input('Number of Proteins', value=2, min_value=1, step=1)
         num_p1 = num_p+1
-
-        df_l = pd.DataFrame(np.array([[0.001], [1000.0]]).T, ['X-axis'], ['Min. Ligand Conc. (μM)', 'Max. Ligand Conc. (μM)'])
-        edited_df_l = st.experimental_data_editor(df_l)
 
         column_p = ['Protein %d' % (i+1) for i in range(int(num_p))]
         df_p = pd.DataFrame(np.tile([10.0], (1, int(num_p))), ['Prot. Conc. (μM)'], column_p)
         edited_df_p = st.experimental_data_editor(df_p) 
 
-
         column_kd = ['Protein %d' % (i+1) for i in range(int(num_p))]
-        df_kd = pd.DataFrame(np.tile([1.0], (1, int(num_p))), [f'Kd (μM)'], column_kd)
+        df_kd = pd.DataFrame([[0.001*10**i for i in range(int(num_p))]], ['Kd (μM)'], column_kd)
         edited_df_kd = st.experimental_data_editor(df_kd) 
+
+        st.write('---')
+
+        lmin = st.number_input('Min lig', value=0.001, min_value=0.0, format = '%g', step=0.01)
+        lmax = st.number_input('Max lig', value=1000, min_value=1, step=100)
 
         xlog = st.checkbox('X-axis in log scale', value=True)
 
@@ -95,8 +94,7 @@ def main():
         raw_data = []
         i = 0
         ratios = [1.0] * int(num_p)
-        lmax = edited_df_l.loc['X-axis','Max. Ligand Conc. (μM)']
-        lmin = edited_df_l.loc['X-axis','Min. Ligand Conc. (μM)']
+
         
         if int(num_p) == 1:
             if xlog:
@@ -110,7 +108,7 @@ def main():
             hover_tips = [("[P]:[L]", "@ratio_txt : $x"), ("Fraction", "$y")]
             fig = figure(title="", x_axis_type=x_axis_type, x_axis_label=x_label, y_axis_label=y_label, tools=tools, tooltips=hover_tips)
 
-            for ri, r in enumerate(ratios):  #plot
+            for ri, r in enumerate(ratios):
                 frac = H
                 i=i+1
                 p_mol = edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'] 
@@ -147,7 +145,7 @@ def main():
             hover_tips = [("[P]:[L]", "@ratio_txt : $x"), ("Fraction", "$y")]
             fig = figure(title="", x_axis_type=x_axis_type, x_axis_label=x_label, y_axis_label=y_label, tools=tools, tooltips=hover_tips)
 
-            for ri, r in enumerate(ratios):  #plot
+            for ri, r in enumerate(ratios):  
                 frac = H
                 i=i+1
                 p_mol = edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'] 
@@ -193,7 +191,7 @@ def main():
                 }
             """)
             fig.js_on_event(DoubleTap, toggle_legend_js)
-        st.text("") # workaround for a layout bug in streamlit 
+        st.text("") 
         st.bokeh_chart(fig, use_container_width=True)
  
 
@@ -202,10 +200,7 @@ def one_bind(kd, prot_conc, H):
     return total
 
 def percent_bound(kd, kd_list, prot_conc, prot_conc_list, H):
-    adj_kd = kd
-    #for i in range(len(kd_list)):
-    #    adj_kd = adj_kd*(1+prot_conc_list[i]/kd_list[i])
-    total = (prot_conc*H)/(adj_kd+H)
+    total = (prot_conc*H)/(kd+H)
     return total
 
 def get_username():
