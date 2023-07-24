@@ -32,7 +32,7 @@ from sympy.abc import H
 
 
 def main():
-    title = "Single-Ligand Multi-Protein Binding"
+    title = "Single Ligand Multi-Protein Binding"
     st.set_page_config(page_title=title, layout="wide")
 
     hosted, host = is_hosted(return_host=True)
@@ -63,7 +63,6 @@ def main():
     with col1:
         
         num_p = st.number_input('Number of Proteins', value=2, min_value=1, step=1)
-        num_p1 = num_p+1
 
         column_p = ['Protein %d' % (i+1) for i in range(int(num_p))]
         df_p = pd.DataFrame(np.tile([10.0], (1, int(num_p))), ['Prot. Conc. (μM)'], column_p)
