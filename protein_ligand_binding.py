@@ -49,7 +49,7 @@ def main():
         st.latex(r'f_A = \frac{[L]_{free}{\cdot}[P_{A_{0}}]}{K_{A}+[L]_{free}}{\cdot}\frac{1}{[P_{A_{0}}]} = \frac{[L]_{free}}{K_{A}+[L]_{free}}.')
         st.write(r'Note that $[L]_{free}$ means free, unbound ligand concentration that we cannot control directly. Instead, we can only control the total concentration of the protein ($P_{A_{0}}=[P_{A}{\cdot}L]+[P]_{A_{free}}$ and $P_{B_{0}}=[P_{B}{\cdot}L]+[P]_{B_{free}}$) and ligand ($L_0=[P_{A}{\cdot}L]+[P_{B}{\cdot}L]+[L]_{free}$). So to generalize this to $n$ number of proteins we see,')
         st.latex(r'L_0=[P_{A}{\cdot}L]+[P_{B}{\cdot}L]+[P_{C}{\cdot}L]+...+[P_{n}{\cdot}L]+[L]_{free}.')
-        st.write(r'Thus we can numerically solve for $L_{free}$, then recursively plugging that value back into our fraction bound equation, generating a binding fraction curve.')
+        st.write(r'Thus we can numerically solve for $L_{free}$, then recursively plugging that value back into our fraction bound equation to generate a binding fraction curve.')
         hide_streamlit_style = """
         <style>
         #MainMenu {visibility: hidden;}
