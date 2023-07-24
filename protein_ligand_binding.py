@@ -40,15 +40,15 @@ def main():
         st.error(f"This app hosted on Heroku will be unavailable starting November 28, 2022 [when Heroku discontinues free hosting service](https://blog.heroku.com/next-chapter). Please switch to [the same app hosted elsewhere](https://jianglab-protein-ligand-binding-streamlit-app-7qd88x.streamlitapp.com)")
 
     with st.sidebar:
-        st.title(title)
-        st.write(r'For a competitive binding reaction:$\\P_{A} + L\  {\rightleftharpoons}\  P_{A}{\cdot}L$ $\\P_{B} + L\  {\rightleftharpoons}\  P_{B}{\cdot}L$')
-        st.write(r'the binding affinities, $K_A$ and $K_B$, are defined as  $K_D = \frac{[P]_{free}{\cdot}[L]_{free}}{[P {\cdot}L]}$.')
-        st.write(r'Then the concentration of protein, $P_{A}$, in a competitive ligand-bound state is,')
+               st.write(r'For a competitive binding reaction:$\\P_{A} + L\  {\rightleftharpoons}\  P_{A}{\cdot}L$ $\\P_{B} + L\  {\rightleftharpoons}\  P_{B}{\cdot}L$')
+        st.write(r'the binding affinities, $K_A$ and $K_B$, are defined as  $K_D = \frac{[P]_{free}[L]_{free}}{[P {\cdot}L]}$.')
+        st.write(r'Then, by equations 1-3, the concentration of protein, $P_{A}$, in a competitive ligand-bound state is:')
         st.latex(r'[P_A{\cdot}L] = \frac{[L]_{free}{\cdot}[P_{A_{0}}]}{K_{A}+[L]_{free}}.')
+        st.write(r'So we see that the fraction of protein A, $f_A$, in a ligand-bound state is,')
+        st.latex(r'f_A = \frac{[L]_{free}{\cdot}[P_{A_{0}}]}{K_{A}+[L]_{free}}{\cdot}\frac{1}{[P_{A_{0}}]} = \frac{[L]_{free}}{K_{A}+[L]_{free}}.')
         st.write(r'Note that $[L]_{free}$ means free, unbound ligand concentration that we cannot control directly. Instead, we can only control the total concentration of the protein ($P_{A_{0}}=[P_{A}{\cdot}L]+[P]_{A_{free}}$ and $P_{B_{0}}=[P_{B}{\cdot}L]+[P]_{B_{free}}$) and ligand ($L_0=[P_{A}{\cdot}L]+[P_{B}{\cdot}L]+[L]_{free}$). So to generalize this to $n$ number of proteins we see,')
         st.latex(r'L_0=[P_{A}{\cdot}L]+[P_{B}{\cdot}L]+[P_{C}{\cdot}L]+...+[P_{n}{\cdot}L]+[L]_{free}.')
-        st.write(r'Thus we can numerically solve for $L_{free}$ and recursively plug that value back into our concentration bound equation, generating a binding fraction curve.')
-        
+        st.write(r'Thus we can numerically solve for $L_{free}$, recursively pluging that value back into our fraction bound equation, generating a binding fraction curve.')
         hide_streamlit_style = """
         <style>
         #MainMenu {visibility: hidden;}
