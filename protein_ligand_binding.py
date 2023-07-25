@@ -75,8 +75,9 @@ def main():
 
         st.write('---')
 
+        lmax = st.number_input('Maximum Ligand COncentration', value=1000, min_value=1, step=1000)
         lmin = st.number_input('Min lig', value=0.001, min_value=0.0, format = '%g', step=0.01)
-        lmax = st.number_input('Max lig', value=1000, min_value=1, step=1000)
+        
 
         xlog = st.checkbox('X-axis in log scale', value=True)
 
