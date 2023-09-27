@@ -63,20 +63,16 @@ def main():
 
     with col1:
         
-        num_p = st.number_input('Number of Proteins', value=2, min_value=1, step=1)
+        num_p = st.number_input('Number of Proteins', value=3, min_value=1, step=1)
 
         column_p = ['Protein %d' % (i+1) for i in range(int(num_p))]
-        df_p = pd.DataFrame(np.tile([10.0], (1, int(num_p))), ['Prot. Conc. (μM)'], column_p)
-        edited_df_p = st.experimental_data_editor(df_p) 
+        df = pd.DataFrame([np.ones(num_p), [0.001*10**(i*2) for i in range(int(num_p))]], ['Prot. Conc. (μM)', 'Kd (μM)'], column_p)
+        edited_df = st.data_editor(df) 
 
-        column_kd = ['Protein %d' % (i+1) for i in range(int(num_p))]
-        df_kd = pd.DataFrame([[0.001*10**i for i in range(int(num_p))]], ['Kd (μM)'], column_kd)
-        edited_df_kd = st.experimental_data_editor(df_kd) 
+        st.divider()
 
-        st.write('---')
-
-        lmax = st.number_input('Maximum Ligand Concentration', value=1000, min_value=1, step=1000)
-        lmin = st.number_input('Minimum Ligand Concentration', value=0.001, min_value=0.0, format = '%g', step=0.01)
+        lmax = st.number_input('Maximal Ligand Concentration (μM)', value=1000, min_value=1, step=1000)
+        lmin = st.number_input('Minimal Ligand Concentration (μM)', value=0.001, min_value=0.0, format = '%g', step=0.01)
         
 
         xlog = st.checkbox('X-axis in log scale', value=True)
@@ -112,18 +108,18 @@ def main():
             for ri, r in enumerate(ratios):
                 frac = H
                 i=i+1
-                p_mol = edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'] 
-                kd_molar = edited_df_kd.loc['Kd (μM)', f'Protein {i}'] 
-                kd_list_molar = pd.concat([edited_df_kd.iloc[0][0:i-1],edited_df_kd.iloc[0][i:]])
-                p_mol_list = pd.concat([edited_df_p.iloc[0][0:i-1],edited_df_p.iloc[0][i:]])
-                ratio_txt = f"{edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}']}"
+                p_mol = edited_df.loc['Prot. Conc. (μM)', f'Protein {i}'] 
+                kd_molar = edited_df.loc['Kd (μM)', f'Protein {i}'] 
+                kd_list_molar = pd.concat([edited_df.iloc[1][0:i-1],edited_df.iloc[1][i:]])
+                p_mol_list = pd.concat([edited_df.iloc[0][0:i-1],edited_df.iloc[0][i:]])
+                ratio_txt = f"{edited_df.loc['Prot. Conc. (μM)', f'Protein {i}']}"
                 frac += one_bind(kd=kd_molar, prot_conc=p_mol, H=H)
                 sol_l=[]
                 for j in l:
                     tmp=frac-j
                     sol_l.append(nsolve(tmp, (0,j), solver = 'bisect'))
                 sol_l=np.array(sol_l,dtype=np.float64)
-                total = (one_bind(kd=kd_molar, prot_conc=p_mol, H = sol_l))/(edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'])
+                total = (one_bind(kd=kd_molar, prot_conc=p_mol, H = sol_l))/(edited_df.loc['Prot. Conc. (μM)', f'Protein {i}'])
                 source = dict(x=x, y=total, ratio_txt=[ratio_txt]*len(x), kd=[kd_molar]*len(x))
                 line_dash = line_dashes[ri%len(line_dashes)]
                 line = fig.line(x='x', y='y', source=source, line_dash=line_dash, line_width=2)
@@ -149,18 +145,18 @@ def main():
             for ri, r in enumerate(ratios):  
                 frac = H
                 i=i+1
-                p_mol = edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'] 
-                kd_molar = edited_df_kd.loc['Kd (μM)', f'Protein {i}'] 
-                kd_list_molar = pd.concat([edited_df_kd.iloc[0][0:i-1],edited_df_kd.iloc[0][i:]])
-                p_mol_list = pd.concat([edited_df_p.iloc[0][0:i-1],edited_df_p.iloc[0][i:]])
-                ratio_txt = f"{edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}']}"
+                p_mol = edited_df.loc['Prot. Conc. (μM)', f'Protein {i}'] 
+                kd_molar = edited_df.loc['Kd (μM)', f'Protein {i}'] 
+                kd_list_molar = pd.concat([edited_df.iloc[1][0:i-1],edited_df.iloc[1][i:]])
+                p_mol_list = pd.concat([edited_df.iloc[0][0:i-1],edited_df.iloc[0][i:]])
+                ratio_txt = f"{edited_df.loc['Prot. Conc. (μM)', f'Protein {i}']}"
                 frac += percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc = p_mol, prot_conc_list=p_mol_list, H=H)
                 sol_l=[]
                 for j in l:
                     tmp = frac-j
                     sol_l.append(nsolve(tmp, (0,j), solver = 'bisect'))
                 sol_l = np.array(sol_l,dtype=np.float64)
-                total = (percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc = p_mol, prot_conc_list=p_mol_list, H = sol_l))/(edited_df_p.loc['Prot. Conc. (μM)', f'Protein {i}'])
+                total = (percent_bound(kd=kd_molar, kd_list=kd_list_molar, prot_conc = p_mol, prot_conc_list=p_mol_list, H = sol_l))/(edited_df.loc['Prot. Conc. (μM)', f'Protein {i}'])
                 source = dict(x=x, y=total, ratio_txt=[ratio_txt]*len(x), kd=[kd_molar]*len(x))
                 line_dash = line_dashes[ri%len(line_dashes)]
                 line = fig.line(x='x', y='y', source=source, line_dash=line_dash, line_width=2)
