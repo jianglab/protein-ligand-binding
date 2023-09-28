@@ -46,6 +46,11 @@ def main():
         lmin = edited_df_ligand.iloc[0, 0]
         lmax = edited_df_ligand.iloc[0, 1]
 
+        if num_p > 1:
+            plot_specificity = st.checkbox('Plot specificity', value=False)
+        else:
+            plot_specificity = False
+
         xlog = st.checkbox('X-axis in log scale', value=True)
 
         st.markdown("  \n")
@@ -145,6 +150,7 @@ def main():
             fig.add_layout(legend)
             fig.legend[0].location = "top_left"
             fig.legend.click_policy= "hide"
+            fig.legend.background_fill_alpha = 0
             toggle_legend_js = CustomJS(args=dict(leg=fig.legend[0]), code="""
                 if (leg.visible) {
                     leg.visible = false
@@ -154,7 +160,23 @@ def main():
                 }
             """)
             fig.js_on_event(DoubleTap, toggle_legend_js)
-        st.text("") 
+
+        if plot_specificity:
+            protein_concentrations = edited_df.iloc[0, :].values
+            kds = edited_df.iloc[1, :].values
+            target_index = np.argmin(kds)
+            c_target = protein_concentrations[target_index] * np.array(raw_data[target_index][-1])
+            c_others = np.zeros_like(raw_data[0][-1])
+            for pi in range(len(raw_data)):
+                if pi == target_index: continue
+                c_others += protein_concentrations[pi] * np.array(raw_data[pi][-1])
+            specificity = c_target/c_others
+
+            from bokeh.models import LinearAxis, Range1d
+            fig.extra_y_ranges['secondary'] = Range1d(start=0, end=np.max(specificity))
+            fig.add_layout(LinearAxis(y_range_name='secondary', axis_label='Specificity'), 'right')
+            fig.line(x=l, y=specificity, legend_label=f'Specificity for protein {target_index+1}', color='red', y_range_name='secondary')
+
         st.bokeh_chart(fig, use_container_width=True)
 
 def one_bind(kd, prot_conc, H):
