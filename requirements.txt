@@ -1,7 +1,7 @@
-streamlit==1.27.0
-numpy==1.24.4
-scipy==1.11.1
-pandas==2.0.3
 bokeh==2.4.3
+numpy==1.26.3
+pandas==2.2.0
 qrcode==7.4.2
+scipy==1.11.4
+streamlit==1.30.0
 sympy==1.12
