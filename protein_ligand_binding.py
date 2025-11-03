@@ -246,7 +246,7 @@ def main():
             st.dataframe(df, width=None)
             st.markdown(get_table_download_link(df), unsafe_allow_html=True)
 
-        st.markdown("*Developed by the [Jiang Lab@Purdue University](https://jiang.bio.purdue.edu). Report problems to Wen Jiang (jiang12 at purdue.edu)*")
+        st.markdown("*Developed by the [Jiang Lab@Penn State University](https://jianglab.science.psu.edu/binding). Report problems to [protein-ligand-binding@GitHub](https://github.com/jianglab/protein-ligand-binding/issues)*")
 
         #qr_image = qr_code()
         #st.image(qr_image)
