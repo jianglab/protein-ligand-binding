@@ -54,7 +54,7 @@ def main():
         xlog = st.checkbox('X-axis in log scale', value=True)
 
         st.markdown("  \n")
-        st.markdown("*Developed by the [Jiang Lab@Purdue University](https://jiang.bio.purdue.edu/multi-binding). Report problems to [multi-binding@GitHub](https://github.com/jianglab/protein-ligand-binding/issues)*")
+        st.markdown("*Developed by the [Jiang Lab@Penn State University](https://jianglab.science.psu.edu/multi-binding). Report problems to [multi-binding@GitHub](https://github.com/jianglab/protein-ligand-binding/issues)*")
 
     with col2:
         y_label = "Fraction of protein in ligand-bound state"
